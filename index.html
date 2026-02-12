@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Expense Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body{
+background:#0f172a;
+color:white;
+font-family:Segoe UI;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+/* SPLASH SCREEN */
+#splash{
+position:fixed;
+inset:0;
+background:#0f172a;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+z-index:9999;
+}
+
+.logoCircle{
+width:95px;
+height:95px;
+border-radius:25px;
+background:linear-gradient(135deg,#6366f1,#8b5cf6);
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:45px;
+font-weight:bold;
+color:white;
+animation:pulse 1.5s infinite;
+box-shadow:0 0 25px rgba(99,102,241,0.6);
+}
+
+.appName{
+margin-top:18px;
+font-size:24px;
+font-weight:bold;
+color:#818cf8;
+letter-spacing:1px;
+}
+
+@keyframes pulse{
+0%{transform:scale(1);}
+50%{transform:scale(1.15);}
+100%{transform:scale(1);}
+}
+
+/* MAIN APP */
+#main{
+width:380px;
+height:95vh;
+background:#1e293b;
+border-radius:25px;
+padding:25px;
+overflow:auto;
+box-shadow:0 0 25px rgba(0,0,0,0.6);
+display:none;
+}
+
+.page{
+display:none;
+flex-direction:column;
+justify-content:center;
+height:100%;
+}
+
+h2{
+text-align:center;
+margin-bottom:20px;
+color:#818cf8;
+}
+
+input,select{
+width:100%;
+padding:12px;
+margin-bottom:12px;
+border-radius:10px;
+border:1px solid #334155;
+background:#0f172a;
+color:white;
+}
+
+.passwordBox{
+position:relative;
+}
+
+.passwordBox span{
+position:absolute;
+right:12px;
+top:10px;
+cursor:pointer;
+color:#22c55e;
+}
+
+button{
+width:100%;
+padding:12px;
+border:none;
+border-radius:10px;
+font-weight:bold;
+cursor:pointer;
+margin-bottom:10px;
+color:white;
+}
+
+.primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);}
+.green{background:#22c55e;}
+.red{background:#ef4444;}
+.gray{background:#334155;}
+
+.userName{
+text-align:center;
+font-weight:bold;
+color:#22c55e;
+margin-bottom:10px;
+}
+
+.balanceCard{
+background:#0f172a;
+padding:15px;
+border-radius:12px;
+text-align:center;
+margin-bottom:15px;
+}
+
+.tx{
+background:#334155;
+padding:8px;
+border-radius:8px;
+margin-bottom:6px;
+display:flex;
+justify-content:space-between;
+}
+</style>
+</head>
+
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+<div class="logoCircle">$</div>
+<div class="appName">Expense Tracker</div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main">
+
+<!-- LOGIN -->
+<div id="login" class="page">
+<h2>Login</h2>
+
+<input id="loginInput" placeholder="Username OR Mobile">
+
+<div class="passwordBox">
+<input type="password" id="loginPass" placeholder="Password">
+<span onclick="togglePassword()">👁</span>
+</div>
+
+<button class="primary" onclick="login()">Login</button>
+<button class="gray" onclick="showPage('forgot')">Forgot Password?</button>
+<button class="gray" onclick="showPage('signup')">Create Account</button>
+</div>
+
+<!-- SIGNUP -->
+<div id="signup" class="page">
+<h2>Create Account</h2>
+
+<input id="name" placeholder="Full Name">
+<input id="username" placeholder="Username">
+<input id="mobile" placeholder="Mobile (10 digits)">
+
+<div class="passwordBox">
+<input type="password" id="password" placeholder="Password">
+<span onclick="toggleSignupPassword()">👁</span>
+</div>
+
+<select id="securityQ">
+<option value="">Select Security Question</option>
+<option value="city">What is your birth city?</option>
+<option value="pet">What is your first pet name?</option>
+<option value="school">What is your first school name?</option>
+<option value="mother">What is your mother's maiden name?</option>
+</select>
+
+<input id="securityA" placeholder="Security Answer">
+
+<button class="primary" onclick="signup()">Register</button>
+<button class="gray" onclick="showPage('login')">Back</button>
+</div>
+
+<!-- FORGOT PASSWORD -->
+<div id="forgot" class="page">
+<h2>Recover Password</h2>
+
+<input id="fUser" placeholder="Username">
+<input id="fMobile" placeholder="Registered Mobile">
+
+<select id="fQuestion">
+<option value="">Select Security Question</option>
+<option value="city">Birth city?</option>
+<option value="pet">First pet name?</option>
+<option value="school">First school name?</option>
+<option value="mother">Mother maiden name?</option>
+</select>
+
+<input id="fAnswer" placeholder="Security Answer">
+
+<button class="primary" onclick="recover()">Recover Password</button>
+<button class="gray" onclick="showPage('login')">Back</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="home" class="page">
+
+<h2>Expense Tracker</h2>
+
+<div class="userName" id="welcomeText"></div>
+
+<div class="balanceCard">
+<h3>Total Balance</h3>
+<h1 id="balance">₹ 0</h1>
+</div>
+
+<input id="title" placeholder="Title">
+<input type="number" id="amount" placeholder="Amount">
+
+<div style="display:flex;gap:10px;">
+<button class="green" onclick="addTransaction(true)">Income</button>
+<button class="red" onclick="addTransaction(false)">Expense</button>
+</div>
+
+<button class="gray" onclick="toggleHistory()">View History</button>
+<button class="primary" onclick="showPage('analysis')">Data Analysis</button>
+
+<div id="historySection" style="display:none;margin-top:10px;">
+<div id="history"></div>
+</div>
+
+<button class="gray" onclick="logout()">Logout</button>
+</div>
+
+<!-- ANALYSIS -->
+<div id="analysis" class="page">
+<h2>Data Analysis</h2>
+
+<select id="chartType">
+<option value="">Select Chart Type</option>
+<option value="bar">Bar Chart</option>
+<option value="pie">Pie Chart</option>
+<option value="doughnut">Doughnut Chart</option>
+</select>
+
+<button class="primary" onclick="generateChart()">Generate Chart</button>
+
+<canvas id="myChart" style="margin-top:15px;"></canvas>
+
+<button class="gray" onclick="showPage('home')">Back</button>
+</div>
+
+</div>
+
+<script>
+
+let activeUser=null;
+let historyVisible=false;
+let chartInstance=null;
+
+/* Splash Delay */
+window.onload=function(){
+setTimeout(()=>{
+document.getElementById("splash").style.display="none";
+document.getElementById("main").style.display="block";
+showPage("login");
+},2500);
+};
+
+function showPage(id){
+document.querySelectorAll(".page").forEach(p=>p.style.display="none");
+document.getElementById(id).style.display="flex";
+}
+
+function togglePassword(){
+let pass=document.getElementById("loginPass");
+pass.type=pass.type==="password"?"text":"password";
+}
+
+function toggleSignupPassword(){
+let pass=document.getElementById("password");
+pass.type=pass.type==="password"?"text":"password";
+}
+
+function signup(){
+let name=nameInput.value.trim();
+let username=usernameInput.value.trim();
+let mobile=mobileInput.value.trim();
+let password=passwordInput.value.trim();
+let q=securityQInput.value;
+let a=securityAInput.value.trim();
+
+if(!name||!username||!mobile||!password||!q||!a){
+alert("Fill all fields");
+return;
+}
+
+if(mobile.length!==10){
+alert("Mobile must be 10 digits");
+return;
+}
+
+let db=JSON.parse(localStorage.getItem("DB"))||{};
+if(db[username]){
+alert("Username already exists");
+return;
+}
+
+db[username]={name,mobile,password,securityQ:q,securityA:a,transactions:[]};
+localStorage.setItem("DB",JSON.stringify(db));
+
+activeUser=username;
+showDashboard();
+}
+
+function login(){
+let input=document.getElementById("loginInput").value.trim();
+let pass=document.getElementById("loginPass").value.trim();
+let db=JSON.parse(localStorage.getItem("DB"))||{};
+
+for(let user in db){
+if((user===input || db[user].mobile===input)
+&& db[user].password===pass){
+activeUser=user;
+showDashboard();
+return;
+}
+}
+alert("Invalid Login");
+}
+
+function recover(){
+let u=document.getElementById("fUser").value.trim();
+let m=document.getElementById("fMobile").value.trim();
+let q=document.getElementById("fQuestion").value;
+let a=document.getElementById("fAnswer").value.trim();
+
+let db=JSON.parse(localStorage.getItem("DB"))||{};
+
+if(db[u] &&
+db[u].mobile===m &&
+db[u].securityQ===q &&
+db[u].securityA===a){
+alert("Your Password: "+db[u].password);
+}else{
+alert("Details incorrect");
+}
+}
+
+function showDashboard(){
+let db=JSON.parse(localStorage.getItem("DB"));
+document.getElementById("welcomeText").innerText=db[activeUser].name;
+showPage("home");
+updateUI();
+}
+
+function addTransaction(isIncome){
+let title=document.getElementById("title").value.trim();
+let amount=parseFloat(document.getElementById("amount").value);
+
+if(title===""||isNaN(amount)||amount<=0){
+alert("Enter valid amount");
+return;
+}
+
+let db=JSON.parse(localStorage.getItem("DB"));
+let user=db[activeUser];
+
+user.transactions.push({title,amount:isIncome?amount:-amount});
+localStorage.setItem("DB",JSON.stringify(db));
+
+document.getElementById("title").value="";
+document.getElementById("amount").value="";
+updateUI();
+}
+
+function updateUI(){
+let db=JSON.parse(localStorage.getItem("DB"));
+let user=db[activeUser];
+let balance=0;
+let history=document.getElementById("history");
+history.innerHTML="";
+
+user.transactions.forEach(tx=>{
+balance+=tx.amount;
+history.innerHTML+=`
+<div class="tx">
+<span>${tx.title}</span>
+<span style="color:${tx.amount>=0?'#22c55e':'#ef4444'}">
+₹ ${tx.amount}
+</span>
+</div>`;
+});
+
+let bal=document.getElementById("balance");
+bal.innerText="₹ "+balance;
+bal.style.color=balance>=0?"#22c55e":"#ef4444";
+}
+
+function toggleHistory(){
+historyVisible=!historyVisible;
+document.getElementById("historySection").style.display=
+historyVisible?"block":"none";
+}
+
+function generateChart(){
+let type=document.getElementById("chartType").value;
+if(!type){alert("Select chart type");return;}
+
+let db=JSON.parse(localStorage.getItem("DB"));
+let user=db[activeUser];
+
+let income=0,expense=0;
+user.transactions.forEach(tx=>{
+if(tx.amount>0) income+=tx.amount;
+else expense+=Math.abs(tx.amount);
+});
+
+if(chartInstance) chartInstance.destroy();
+
+chartInstance=new Chart(document.getElementById("myChart"),{
+type:type,
+data:{
+labels:["Income","Expense"],
+datasets:[{
+data:[income,expense],
+backgroundColor:["#22c55e","#ef4444"]
+}]
+}
+});
+}
+
+function logout(){
+activeUser=null;
+showPage("login");
+}
+
+const nameInput=document.getElementById("name");
+const usernameInput=document.getElementById("username");
+const mobileInput=document.getElementById("mobile");
+const passwordInput=document.getElementById("password");
+const securityQInput=document.getElementById("securityQ");
+const securityAInput=document.getElementById("securityA");
+
+</script>
+
+</body>
+</html>
